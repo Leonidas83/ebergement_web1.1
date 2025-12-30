@@ -1,1 +1,33 @@
-
+```html
+<!-- Fichier: templates/register.html (à placer dans le dossier templates/) -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main>
+        <form action="{{ url_for('register') }}" method="POST">
+            <h1>Inscription</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <input type="text" name="username" placeholder="Nom d'utilisateur" required><br>
+            <input type="email" name="email" placeholder="Email" required><br>
+            <input type="password" name="password" placeholder="Mot de passe" required><br>
+            <input type="submit" value="S'inscrire">
+        </form>
+        <p>Déjà un compte ? <a href="{{ url_for('login') }}">Connectez-vous ici</a></p>
+    </main>
+</body>
+</html>
+```
