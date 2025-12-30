@@ -1,0 +1,110 @@
+### Fichier: `templates/client_dashboard.html` (à placer dans le dossier `templates`)
+
+```html
+<!-- Fichier: templates/client_dashboard.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Client</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dark-mode">
+    <header class="dark-mode-header">
+        <nav>
+            <div class="logo">Mon Hébergeur - Client</div>
+            <ul class="nav-links">
+                <li><a href="/" class="dark-mode-link">Accueil</a></li>
+                <li><a href="/client_dashboard" class="dark-mode-link">Mon Tableau de Bord</a></li>
+                <li><a href="/logout" class="dark-mode-link">Déconnexion</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="admin-main-content"> <!-- Réutilise les styles du mode sombre admin pour la cohérence -->
+        <h1>Bienvenue sur votre Tableau de Bord, {{ user.username }} !</h1>
+        <p>Gérez vos services et suivez vos activités ici.</p>
+
+        <section class="admin-section">
+            <h2>Mes Informations</h2>
+            <p><strong>Email :</strong> {{ user.email }}</p>
+            <p><strong>Statut :</strong> {% if user.is_admin %}Administrateur{% else %}Client{% endif %}</p>
+        </section>
+
+        <section class="admin-section">
+            <h2>Mes Abonnements Actifs</h2>
+            <div class="table-container">
+                <table class="dark-mode-table">
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Catégorie</th>
+                            <th>Prix</th>
+                            <th>Date de début</th>
+                            <th>Maintenance Élite</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in active_subscriptions %}
+                        <tr>
+                            <td>{{ sub.plan.name }}</td>
+                            <td>{{ sub.plan.category.name }}</td>
+                            <td>{{ sub.plan.price }}€/mois</td>
+                            <td>{{ sub.start_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ 'Oui' if sub.plan.elite_maintenance else 'Non' }}</td>
+                            <td>{% if sub.is_active %}Actif{% else %}Inactif{% endif %}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6">Aucun abonnement actif trouvé.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-section">
+            <h2>Mes Tickets de Support</h2>
+            <div class="table-container">
+                <table class="dark-mode-table">
+                    <thead>
+                        <tr>
+                            <th>ID Ticket</th>
+                            <th>Sujet</th>
+                            <th>Statut</th>
+                            <th>Créé le</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in user_tickets %}
+                        <tr>
+                            <td>{{ ticket.id }}</td>
+                            <td>{{ ticket.subject }}</td>
+                            <td>{{ ticket.status }}</td>
+                            <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td><a href="#" class="btn-action dark-mode-button">Voir Détails</a></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">Aucun ticket de support trouvé.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Ajoutez d'autres sections spécifiques au client ici -->
+
+    </main>
+
+    <footer class="dark-mode-footer">
+        <p>&copy; 2023 Mon Hébergeur. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
+```
