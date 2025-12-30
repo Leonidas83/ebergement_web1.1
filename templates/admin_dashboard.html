@@ -1,7 +1,5 @@
-### Fichier: `templates/admin_dashboard.html` (à placer dans le dossier `templates`)
-
 ```html
-<!-- Fichier: templates/admin_dashboard.html -->
+<!-- Fichier: templates/admin_dashboard.html (à placer dans le dossier templates/) -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -51,7 +49,7 @@
                             <td>
                                 {% for sub in user.subscriptions %}
                                     {% if sub.is_active %}
-                                        {{ sub.plan.name }} ({{ sub.plan.category.name }})<br>
+                                        {{ sub.plan_rel.name }} ({{ sub.plan_rel.category.name }})<br>
                                     {% endif %}
                                 {% else %}
                                     Aucun
@@ -60,7 +58,7 @@
                             <td>
                                 {% set has_elite = false %}
                                 {% for sub in user.subscriptions %}
-                                    {% if sub.is_active and sub.plan.elite_maintenance %}
+                                    {% if sub.is_active and sub.plan_rel.elite_maintenance %}
                                         {% set has_elite = true %}
                                     {% endif %}
                                 {% endfor %}
@@ -96,11 +94,11 @@
                         {% for ticket in tickets %}
                         <tr>
                             <td>{{ ticket.id }}</td>
-                            <td>{{ ticket.user.username }}</td>
+                            <td>{{ ticket.user_ticket_rel.username }}</td>
                             <td>{{ ticket.subject }}</td>
                             <td>{{ ticket.status }}</td>
                             <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>{{ ticket.assigned_admin.username if ticket.assigned_admin else 'Non assigné' }}</td>
+                            <td>{{ ticket.admin_ticket_rel.username if ticket.admin_ticket_rel else 'Non assigné' }}</td>
                             <td>
                                 <a href="#" class="btn-action dark-mode-button">Voir Ticket</a>
                                 <a href="#" class="btn-action dark-mode-button">Changer Statut</a>
@@ -113,6 +111,31 @@
         </section>
 
         <!-- Ajoutez d'autres sections d'administration ici -->
+        <section class="admin-section">
+            <h2>Gestion des Catégories et Plans (Exemple)</h2>
+            <!-- Formulaire pour ajouter une catégorie -->
+            <form action="#" method="post" class="dark-mode-form">
+                <h3>Ajouter une Catégorie</h3>
+                <input type="text" name="name" placeholder="Nom de la Catégorie" required>
+                <button type="submit" class="btn-action dark-mode-button">Ajouter</button>
+            </form>
+            <!-- Formulaire pour ajouter un plan -->
+            <form action="#" method="post" class="dark-mode-form">
+                <h3>Ajouter un Plan</h3>
+                <input type="text" name="name" placeholder="Nom du Plan" required>
+                <textarea name="description" placeholder="Description du Plan (caractéristiques séparées par des virgules)"></textarea>
+                <input type="number" step="0.01" name="price" placeholder="Prix" required>
+                <select name="category_id" required>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>
+                    <input type="checkbox" name="elite_maintenance"> Maintenance Élite
+                </label>
+                <button type="submit" class="btn-action dark-mode-button">Ajouter</button>
+            </form>
+        </section>
 
     </main>
 
