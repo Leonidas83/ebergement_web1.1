@@ -1,7 +1,5 @@
-### Fichier: `templates/client_dashboard.html` (à placer dans le dossier `templates`)
-
 ```html
-<!-- Fichier: templates/client_dashboard.html -->
+<!-- Fichier: templates/client_dashboard.html (à placer dans le dossier templates/) -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -49,11 +47,11 @@
                     <tbody>
                         {% for sub in active_subscriptions %}
                         <tr>
-                            <td>{{ sub.plan.name }}</td>
-                            <td>{{ sub.plan.category.name }}</td>
-                            <td>{{ sub.plan.price }}€/mois</td>
+                            <td>{{ sub.plan_rel.name }}</td>
+                            <td>{{ sub.plan_rel.category.name }}</td>
+                            <td>{{ sub.plan_rel.price }}€/mois</td>
                             <td>{{ sub.start_date.strftime('%Y-%m-%d') }}</td>
-                            <td>{{ 'Oui' if sub.plan.elite_maintenance else 'Non' }}</td>
+                            <td>{{ 'Oui' if sub.plan_rel.elite_maintenance else 'Non' }}</td>
                             <td>{% if sub.is_active %}Actif{% else %}Inactif{% endif %}</td>
                         </tr>
                         {% else %}
@@ -98,7 +96,15 @@
             </div>
         </section>
 
-        <!-- Ajoutez d'autres sections spécifiques au client ici -->
+        <!-- Ajoutez un formulaire pour créer un ticket ici si vous voulez l'inclure directement dans le dashboard -->
+        <section class="admin-section">
+            <h2>Créer un Nouveau Ticket de Support</h2>
+            <form action="{{ url_for('create_ticket') }}" method="post" class="dark-mode-form">
+                <input type="text" name="subject" placeholder="Sujet du ticket" required>
+                <textarea name="message" placeholder="Décrivez votre problème ici..." rows="5" required></textarea>
+                <button type="submit" class="btn-action dark-mode-button">Soumettre le Ticket</button>
+            </form>
+        </section>
 
     </main>
 
