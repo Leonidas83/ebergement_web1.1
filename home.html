@@ -1,1 +1,69 @@
+```html
+<!-- Fichier: templates/home.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue sur notre Service d'Hébergement</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Mon Hébergeur</div>
+            <ul class="nav-links">
+                <li><a href="/">Accueil</a></li>
+                <li><a href="/register">S'inscrire</a></li>
+                <li><a href="/login">Se Connecter</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="/logout">Déconnexion</a></li>
+                    {% if session.get('is_admin') %}
+                        <li><a href="/admin_dashboard">Dashboard Admin</a></li>
+                    {% else %}
+                        <li><a href="/client_dashboard">Dashboard Client</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="hero">
+            <h1>Votre Solution d'Hébergement Ininterrompue</h1>
+            <p>Services de haute performance pour sites web, gaming et cloud.</p>
+            <a href="#services" class="btn">Découvrir nos services</a>
+        </div>
+    </header>
 
+    <main>
+        <section id="services" class="services-section">
+            <h2>Nos Services d'Hébergement</h2>
+            <div class="categories-grid">
+                {% for category in categories %}
+                <div class="category-card">
+                    <h3>{{ category.name }}</h3>
+                    <p>{{ category.description }}</p>
+                    <div class="plans-grid">
+                        {% for plan in category.plans %}
+                        <div class="plan-card">
+                            <h4>{{ plan.name }}</h4>
+                            <p class="price">{{ plan.price }}€/mois</p>
+                            <ul>
+                                {% for feature in plan.features %}
+                                    <li>{{ feature }}</li>
+                                {% endfor %}
+                            </ul>
+                            <button class="btn-select">Choisir ce plan</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Mon Hébergeur. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
+```
