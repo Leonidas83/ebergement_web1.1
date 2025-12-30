@@ -1,1 +1,50 @@
+```html
+<!-- Fichier: templates/create_ticket.html (à placer dans le dossier templates/) -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un Ticket de Support</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dark-mode">
+    <header class="dark-mode-header">
+        <nav>
+            <div class="logo">Mon Hébergeur - Client</div>
+            <ul class="nav-links">
+                <li><a href="/" class="dark-mode-link">Accueil</a></li>
+                <li><a href="/client_dashboard" class="dark-mode-link">Mon Tableau de Bord</a></li>
+                <li><a href="/logout" class="dark-mode-link">Déconnexion</a></li>
+            </ul>
+        </nav>
+    </header>
 
+    <main class="admin-main-content">
+        <h1>Créer un Nouveau Ticket de Support</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('create_ticket') }}" method="post" class="dark-mode-form">
+            <label for="subject">Sujet du ticket:</label>
+            <input type="text" id="subject" name="subject" placeholder="Ex: Problème de connexion, Question technique" required>
+
+            <label for="message">Description du problème:</label>
+            <textarea id="message" name="message" placeholder="Décrivez votre problème en détail..." rows="10" required></textarea>
+
+            <button type="submit" class="btn-action dark-mode-button">Soumettre le Ticket</button>
+        </form>
+    </main>
+
+    <footer class="dark-mode-footer">
+        <p>&copy; 2023 Mon Hébergeur. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
+```
