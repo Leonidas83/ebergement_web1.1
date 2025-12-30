@@ -1,33 +1,33 @@
-### Fichier: `app.py` (à placer à la racine de votre projet)
-
 ```python
 # Fichier: app.py (à placer à la racine de votre projet)
-# NOTE: Pour la facilité d'utilisation dans Google Colab, l'installation des dépendances est incluse directement ici.
-# Dans un projet réel, ces dépendances seraient installées via un fichier requirements.txt séparé.
-# Pour une exécution locale, vous devrez d'abord faire : pip install Flask Flask-SQLAlchemy
 
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_super_secret_key_here' # Remplacez par une clé secrète forte
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' # Base de données SQLite
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_super_secret_key_here') # Remplacez par une clé secrète forte en production
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' # Base de données SQLite pour le développement
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Définition d'un modèle simple pour l'utilisateur (pour la base de données)
+# Définition d'un modèle simple pour l'utilisateur
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    # Relations avec les abonnements et tickets
+    subscriptions = db.relationship('Subscription', backref='user_rel', lazy=True)
+    tickets_created = db.relationship('SupportTicket', foreign_keys='SupportTicket.user_id', backref='user_ticket_rel', lazy=True)
+    tickets_assigned = db.relationship('SupportTicket', foreign_keys='SupportTicket.admin_id', backref='admin_ticket_rel', lazy=True)
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', 'Admin: {self.is_admin}')"
 
-# Modèle pour les Catégories de Services (par exemple: Site Web, Gaming, Cloud)
+# Modèle pour les Catégories de Services
 class ServiceCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
@@ -37,7 +37,7 @@ class ServiceCategory(db.Model):
     def __repr__(self):
         return f"ServiceCategory('{self.name}')"
 
-# Modèle pour les Plans de Services (par exemple: Basique, Premium, Elite pour chaque catégorie)
+# Modèle pour les Plans de Services
 class ServicePlan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -45,11 +45,12 @@ class ServicePlan(db.Model):
     price = db.Column(db.Float, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('service_category.id'), nullable=False)
     elite_maintenance = db.Column(db.Boolean, default=False)
+    subscriptions = db.relationship('Subscription', backref='plan_rel', lazy=True)
 
     def __repr__(self):
         return f"ServicePlan('{self.name}', '{self.price}', Category: '{self.category.name}')"
 
-# Modèle pour les Abonnements Clients (liaison entre User et ServicePlan)
+# Modèle pour les Abonnements Clients
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -58,11 +59,8 @@ class Subscription(db.Model):
     end_date = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
 
-    user = db.relationship('User', backref='subscriptions', lazy=True)
-    plan = db.relationship('ServicePlan', backref='subscriptions', lazy=True)
-
     def __repr__(self):
-        return f"Subscription(User: '{self.user.username}', Plan: '{self.plan.name}', Active: {self.is_active})"
+        return f"Subscription(User: '{self.user_rel.username}', Plan: '{self.plan_rel.name}', Active: {self.is_active})"
 
 # Modèle pour les Tickets de Support Client
 class SupportTicket(db.Model):
@@ -75,16 +73,17 @@ class SupportTicket(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
-    user = db.relationship('User', foreign_keys=[user_id], backref='tickets_created', lazy=True)
-    assigned_admin = db.relationship('User', foreign_keys=[admin_id], backref='tickets_assigned', lazy=True)
-
     def __repr__(self):
-        return f"SupportTicket(ID: {self.id}, Subject: '{self.subject}', Status: '{self.status}', User: '{self.user.username}')"
+        user_name = self.user_ticket_rel.username if self.user_ticket_rel else 'N/A'
+        admin_name = self.admin_ticket_rel.username if self.admin_ticket_rel else 'N/A'
+        return f"SupportTicket(ID: {self.id}, Subject: '{self.subject}', Status: '{self.status}', User: '{user_name}', Admin: '{admin_name}')"
 
 
 # Route d'inscription
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if 'user_id' in session:
+        return redirect(url_for('home'))
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
@@ -105,20 +104,17 @@ def register():
         db.session.commit()
         flash('Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.', 'success')
         return redirect(url_for('login'))
-    return '''
-        <h1>Inscription</h1>
-        <form method="POST">
-            <input type="text" name="username" placeholder="Nom d'utilisateur" required><br>
-            <input type="email" name="email" placeholder="Email" required><br>
-            <input type="password" name="password" placeholder="Mot de passe" required><br>
-            <input type="submit" value="S'inscrire">
-        </form>
-        <p>Déjà un compte ? <a href="/login">Connectez-vous ici</a></p>
-    '''
+    return render_template('register.html')
 
 # Route de connexion
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if user and user.is_admin:
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return redirect(url_for('client_dashboard'))
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -134,15 +130,7 @@ def login():
                 return redirect(url_for('client_dashboard'))
         else:
             flash('Nom d\'utilisateur ou mot de passe incorrect.', 'danger')
-    return '''
-        <h1>Connexion</h1>
-        <form method="POST">
-            <input type="text" name="username" placeholder="Nom d'utilisateur" required><br>
-            <input type="password" name="password" placeholder="Mot de passe" required><br>
-            <input type="submit" value="Se connecter">
-        </form>
-        <p>Pas encore de compte ? <a href="/register">Inscrivez-vous ici</a></p>
-    '''
+    return render_template('login.html')
 
 # Route de déconnexion
 @app.route('/logout')
@@ -161,8 +149,11 @@ def admin_dashboard():
 
     users = User.query.all()
     tickets = SupportTicket.query.order_by(SupportTicket.created_at.desc()).all()
+    categories = ServiceCategory.query.all() 
+    plans = ServicePlan.query.all() 
+    subscriptions = Subscription.query.all() 
 
-    return render_template('admin_dashboard.html', users=users, tickets=tickets)
+    return render_template('admin_dashboard.html', users=users, tickets=tickets, categories=categories, plans=plans, subscriptions=subscriptions)
 
 # Route de tableau de bord client
 @app.route('/client_dashboard')
@@ -181,11 +172,11 @@ def client_dashboard():
 
     return render_template('client_dashboard.html', user=user, active_subscriptions=active_subscriptions, user_tickets=user_tickets)
 
-# Modifie la route d'accueil pour afficher les catégories de services et leurs plans
+# Route d'accueil
 @app.route('/')
 def home():
     # Données de démonstration pour les catégories et les plans
-    # Dans une application réelle, ces données viendraient de la base de données
+    # En production, vous chargeriez ces données depuis la base de données
     categories_data = [
         {
             'name': 'Hébergement de Sites Web',
@@ -216,33 +207,86 @@ def home():
         }
     ]
 
-    # Récupérer les catégories et plans de la base de données si disponibles
-    # Si la base de données est remplie avec des catégories et plans, vous pouvez les charger ici.
-    # Exemple (décommenter si vous avez des données en DB):
-    # categories_db = ServiceCategory.query.all()
-    # if categories_db:
-    #     categories_data = []
-    #     for cat_db in categories_db:
-    #         plans_for_cat = []
-    #         for plan_db in cat_db.plans:
-    #             plans_for_cat.append({
-    #                 'name': plan_db.name,
-    #                 'price': plan_db.price,
-    #                 'features': plan_db.description.split(', ') if plan_db.description else [],
-    #                 'elite_maintenance': plan_db.elite_maintenance
-    #             })
-    #         categories_data.append({
-    #             'name': cat_db.name,
-    #             'description': cat_db.description,
-    #             'plans': plans_for_cat
-    #         })
-
     return render_template('home.html', categories=categories_data)
+
+# Route pour créer un ticket client (Exemple)
+@app.route('/client/tickets/create', methods=['GET', 'POST'])
+def create_ticket():
+    if not session.get('user_id'): # Vérifier si l'utilisateur est connecté
+        flash('Veuillez vous connecter pour créer un ticket.', 'danger')
+        return redirect(url_for('login'))
+
+    if session.get('is_admin'): # Empêcher les admins de créer des tickets client via cette route
+        flash('Les administrateurs ne peuvent pas créer de tickets client directement via cette interface.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    user_id = session['user_id']
+
+    if request.method == 'POST':
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+
+        if not subject or not message:
+            flash('Le sujet et le message ne peuvent pas être vides.', 'danger')
+        else:
+            new_ticket = SupportTicket(user_id=user_id, subject=subject, message=message)
+            db.session.add(new_ticket)
+            db.session.commit()
+            flash('Votre ticket de support a été créé avec succès !', 'success')
+            return redirect(url_for('client_dashboard'))
+
+    return render_template('create_ticket.html')
+
 
 # Exécute l'application si ce fichier est le fichier principal exécuté
 if __name__ == '__main__':
     # Crée toutes les tables de la base de données si elles n'existent pas
     with app.app_context():
         db.create_all()
+
+        # *** Données de DÉMONSTRATION (à retirer ou modifier pour la production) ***
+        # Cette section ajoute des données initiales si la base de données est vide.
+
+        # Ajout d'un admin initial si la base est vide pour faciliter le test
+        if User.query.filter_by(username='admin').first() is None:
+            admin_user = User(username='admin', email='admin@example.com', password=generate_password_hash('adminpassword', method='pbkdf2:sha256'), is_admin=True)
+            db.session.add(admin_user)
+            db.session.commit()
+            print('Admin user created.')
+
+        # Ajout de données de démonstration pour ServiceCategory et ServicePlan si la base est vide
+        if ServiceCategory.query.count() == 0:
+            web_cat = ServiceCategory(name='Hébergement de Sites Web', description='Idéal pour les entreprises et les portfolios.')
+            gaming_cat = ServiceCategory(name='Hébergement de Jeux', description='Créez votre propre serveur pour jouer avec vos amis.')
+            cloud_cat = ServiceCategory(name='Stockage Cloud', description='Stockez vos fichiers en toute sécurité et accédez-y de partout.')
+            db.session.add_all([web_cat, gaming_cat, cloud_cat])
+            db.session.commit()
+
+            plan1 = ServicePlan(name='Basique Web', description='10 Go SSD, 1 Domaine, Support Standard', price=9.99, category=web_cat)
+            plan2 = ServicePlan(name='Pro Gaming', description='8 Go RAM, 4 CPU Cores, Protection DDoS Avancée', price=29.99, category=gaming_cat, elite_maintenance=True)
+            plan3 = ServicePlan(name='Cloud Pro', description='2 To, Sauvegarde Automatique, 10 Utilisateurs', price=30.00, category=cloud_cat, elite_maintenance=True)
+            db.session.add_all([plan1, plan2, plan3])
+            db.session.commit()
+            print('Demo categories and plans created.')
+
+        # Création d'un utilisateur de test si la base est vide (non-admin)
+        if User.query.filter_by(username='testuser').first() is None:
+            test_user = User(username='testuser', email='test@example.com', password=generate_password_hash('testpassword', method='pbkdf2:sha256'), is_admin=False)
+            db.session.add(test_user)
+            db.session.commit()
+            print('Test user created.')
+            # Ajoutez un abonnement pour l'utilisateur de test si des plans existent
+            if ServicePlan.query.first():
+                sub1 = Subscription(user_rel=test_user, plan_rel=ServicePlan.query.filter_by(name='Basique Web').first(), is_active=True)
+                db.session.add(sub1)
+                db.session.commit()
+                print('Subscription for test user created.')
+
+            # Ajoutez un ticket de support pour l'utilisateur de test
+            ticket1 = SupportTicket(user_ticket_rel=test_user, subject='Problème de connexion au site', message='Je ne peux pas accéder à mon site web depuis ce matin.', status='Ouvert')
+            db.session.add(ticket1)
+            db.session.commit()
+            print('Support ticket for test user created.')
+
     app.run(debug=True)
 ```
