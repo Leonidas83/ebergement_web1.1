@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+```python
 from app import app, db, User, ServiceCategory, ServicePlan, Subscription, SupportTicket
 from werkzeug.security import generate_password_hash
 
@@ -48,6 +48,4 @@ with app.app_context():
         print('Support ticket for test user created.')
 
     print('Database initialization and demo data insertion complete.')
-=======
-
->>>>>>> 31a78728ecfb10c0be504b0a258acf11e9c46a2d
+```
