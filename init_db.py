@@ -1,4 +1,3 @@
-```python
 from app import app, db, User, ServiceCategory, ServicePlan, Subscription, SupportTicket
 from werkzeug.security import generate_password_hash
 
@@ -48,4 +47,4 @@ with app.app_context():
         print('Support ticket for test user created.')
 
     print('Database initialization and demo data insertion complete.')
-```
+
