@@ -1,5 +1,5 @@
 ```python
-# Fichier: app.py (à placer à la racine de votre projet)
+# Fichier: app.py (version pour déploiement sur Render)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -7,8 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_super_secret_key_here') # Remplacez par une clé secrète forte en production
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' # Base de données SQLite pour le développement
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_super_secret_key_here') # IMPORTANT: Définissez 'SECRET_KEY' dans les variables d'environnement de Render
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' # Base de données SQLite pour le développement sur Render
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -144,7 +144,7 @@ def logout():
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if not session.get('is_admin'):
-        flash('Accès non autorisé. Vous devez être administrateur.', 'danger')
+        flash('Accès non autorisé. Vous devez ètre administrateur.', 'danger')
         return redirect(url_for('login'))
 
     users = User.query.all()
@@ -164,7 +164,7 @@ def client_dashboard():
 
     user = User.query.get(session['user_id'])
     if user.is_admin:
-        flash('Vous êtes connecté en tant qu\'administrateur. Accès au tableau de bord admin.', 'info')
+        flash('Vous ètes connecté en tant qu\'administrateur. Accès au tableau de bord admin.', 'info')
         return redirect(url_for('admin_dashboard'))
 
     active_subscriptions = Subscription.query.filter_by(user_id=user.id, is_active=True).all()
@@ -227,7 +227,7 @@ def create_ticket():
         message = request.form.get('message')
 
         if not subject or not message:
-            flash('Le sujet et le message ne peuvent pas être vides.', 'danger')
+            flash('Le sujet et le message ne peuvent pas ètre vides.', 'danger')
         else:
             new_ticket = SupportTicket(user_id=user_id, subject=subject, message=message)
             db.session.add(new_ticket)
@@ -238,58 +238,5 @@ def create_ticket():
     return render_template('create_ticket.html')
 
 
-# Exécute l'application si ce fichier est le fichier principal exécuté
-<<<<<<< HEAD
-=======
-if __name__ == '__main__':
-    # Crée toutes les tables de la base de données si elles n'existent pas
-    with app.app_context():
-        db.create_all()
-
-        # *** Données de DÉMONSTRATION (à retirer ou modifier pour la production) ***
-        # Cette section ajoute des données initiales si la base de données est vide.
-
-        # Ajout d'un admin initial si la base est vide pour faciliter le test
-        if User.query.filter_by(username='admin').first() is None:
-            admin_user = User(username='admin', email='admin@example.com', password=generate_password_hash('adminpassword', method='pbkdf2:sha256'), is_admin=True)
-            db.session.add(admin_user)
-            db.session.commit()
-            print('Admin user created.')
-
-        # Ajout de données de démonstration pour ServiceCategory et ServicePlan si la base est vide
-        if ServiceCategory.query.count() == 0:
-            web_cat = ServiceCategory(name='Hébergement de Sites Web', description='Idéal pour les entreprises et les portfolios.')
-            gaming_cat = ServiceCategory(name='Hébergement de Jeux', description='Créez votre propre serveur pour jouer avec vos amis.')
-            cloud_cat = ServiceCategory(name='Stockage Cloud', description='Stockez vos fichiers en toute sécurité et accédez-y de partout.')
-            db.session.add_all([web_cat, gaming_cat, cloud_cat])
-            db.session.commit()
-
-            plan1 = ServicePlan(name='Basique Web', description='10 Go SSD, 1 Domaine, Support Standard', price=9.99, category=web_cat)
-            plan2 = ServicePlan(name='Pro Gaming', description='8 Go RAM, 4 CPU Cores, Protection DDoS Avancée', price=29.99, category=gaming_cat, elite_maintenance=True)
-            plan3 = ServicePlan(name='Cloud Pro', description='2 To, Sauvegarde Automatique, 10 Utilisateurs', price=30.00, category=cloud_cat, elite_maintenance=True)
-            db.session.add_all([plan1, plan2, plan3])
-            db.session.commit()
-            print('Demo categories and plans created.')
-
-        # Création d'un utilisateur de test si la base est vide (non-admin)
-        if User.query.filter_by(username='testuser').first() is None:
-            test_user = User(username='testuser', email='test@example.com', password=generate_password_hash('testpassword', method='pbkdf2:sha256'), is_admin=False)
-            db.session.add(test_user)
-            db.session.commit()
-            print('Test user created.')
-            # Ajoutez un abonnement pour l'utilisateur de test si des plans existent
-            if ServicePlan.query.first():
-                sub1 = Subscription(user_rel=test_user, plan_rel=ServicePlan.query.filter_by(name='Basique Web').first(), is_active=True)
-                db.session.add(sub1)
-                db.session.commit()
-                print('Subscription for test user created.')
-
-            # Ajoutez un ticket de support pour l'utilisateur de test
-            ticket1 = SupportTicket(user_ticket_rel=test_user, subject='Problème de connexion au site', message='Je ne peux pas accéder à mon site web depuis ce matin.', status='Ouvert')
-            db.session.add(ticket1)
-            db.session.commit()
-            print('Support ticket for test user created.')
-
-    app.run(debug=True)
->>>>>>> 31a78728ecfb10c0be504b0a258acf11e9c46a2d
+# Ceci est la fin du fichier app.py. Le bloc `if __name__ == '__main__':` a été déplacé vers init_db.py.
 ```
