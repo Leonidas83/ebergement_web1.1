@@ -1,4 +1,4 @@
-```python
+python
 # Fichier: app.py (version pour déploiement sur Render)
 
 import os
