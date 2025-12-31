@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 absl-py==1.4.0
 accelerate==1.12.0
 access==1.1.10.post3
@@ -651,3 +652,9 @@ yellowbrick==1.5
 yfinance==0.2.66
 zipp==3.23.0
 zstandard==0.25.0
+=======
+Flask
+Flask-SQLAlchemy
+Werkzeug
+Gunicorn
+>>>>>>> 31a78728ecfb10c0be504b0a258acf11e9c46a2d

@@ -1,0 +1,147 @@
+```html
+<!-- Fichier: templates/admin_dashboard.html (à placer dans le dossier templates/) -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Administrateur</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dark-mode">
+    <header class="dark-mode-header">
+        <nav>
+            <div class="logo">Mon Hébergeur - Admin</div>
+            <ul class="nav-links">
+                <li><a href="/" class="dark-mode-link">Accueil</a></li>
+                <li><a href="/admin_dashboard" class="dark-mode-link">Tableau de Bord Admin</a></li>
+                <li><a href="/logout" class="dark-mode-link">Déconnexion</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="admin-main-content">
+        <h1>Tableau de Bord Administrateur</h1>
+        <p>Bienvenue, Administrateur ! Ici, vous pouvez gérer les utilisateurs, les services et le support client.</p>
+
+        <section class="admin-section">
+            <h2>Gestion des Utilisateurs</h2>
+            <div class="table-container">
+                <table class="dark-mode-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom d'utilisateur</th>
+                            <th>Email</th>
+                            <th>Admin</th>
+                            <th>Abonnements Actifs</th>
+                            <th>Maintenance Élite</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ 'Oui' if user.is_admin else 'Non' }}</td>
+                            <td>
+                                {% for sub in user.subscriptions %}
+                                    {% if sub.is_active %}
+                                        {{ sub.plan_rel.name }} ({{ sub.plan_rel.category.name }})<br>
+                                    {% endif %}
+                                {% else %}
+                                    Aucun
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% set has_elite = false %}
+                                {% for sub in user.subscriptions %}
+                                    {% if sub.is_active and sub.plan_rel.elite_maintenance %}
+                                        {% set has_elite = true %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ 'Oui' if has_elite else 'Non' }}
+                            </td>
+                            <td>
+                                <a href="#" class="btn-action dark-mode-button">Voir Profil</a>
+                                <a href="#" class="btn-action dark-mode-button">Prendre Contrôle (à développer)</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-section">
+            <h2>Tickets de Support Client</h2>
+            <div class="table-container">
+                <table class="dark-mode-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Utilisateur</th>
+                            <th>Sujet</th>
+                            <th>Statut</th>
+                            <th>Créé le</th>
+                            <th>Assigné à</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets %}
+                        <tr>
+                            <td>{{ ticket.id }}</td>
+                            <td>{{ ticket.user_ticket_rel.username }}</td>
+                            <td>{{ ticket.subject }}</td>
+                            <td>{{ ticket.status }}</td>
+                            <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ ticket.admin_ticket_rel.username if ticket.admin_ticket_rel else 'Non assigné' }}</td>
+                            <td>
+                                <a href="#" class="btn-action dark-mode-button">Voir Ticket</a>
+                                <a href="#" class="btn-action dark-mode-button">Changer Statut</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Ajoutez d'autres sections d'administration ici -->
+        <section class="admin-section">
+            <h2>Gestion des Catégories et Plans (Exemple)</h2>
+            <!-- Formulaire pour ajouter une catégorie -->
+            <form action="#" method="post" class="dark-mode-form">
+                <h3>Ajouter une Catégorie</h3>
+                <input type="text" name="name" placeholder="Nom de la Catégorie" required>
+                <button type="submit" class="btn-action dark-mode-button">Ajouter</button>
+            </form>
+            <!-- Formulaire pour ajouter un plan -->
+            <form action="#" method="post" class="dark-mode-form">
+                <h3>Ajouter un Plan</h3>
+                <input type="text" name="name" placeholder="Nom du Plan" required>
+                <textarea name="description" placeholder="Description du Plan (caractéristiques séparées par des virgules)"></textarea>
+                <input type="number" step="0.01" name="price" placeholder="Prix" required>
+                <select name="category_id" required>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>
+                    <input type="checkbox" name="elite_maintenance"> Maintenance Élite
+                </label>
+                <button type="submit" class="btn-action dark-mode-button">Ajouter</button>
+            </form>
+        </section>
+
+    </main>
+
+    <footer class="dark-mode-footer">
+        <p>&copy; 2023 Mon Hébergeur - Administration. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
+```
