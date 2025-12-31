@@ -1,6 +1,3 @@
-```python
-# Fichier: app.py (version pour déploiement sur Render)
-
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
@@ -237,6 +234,3 @@ def create_ticket():
 
     return render_template('create_ticket.html')
 
-
-# Ceci est la fin du fichier app.py. Le bloc `if __name__ == '__main__':` a été déplacé vers init_db.py.
-```
